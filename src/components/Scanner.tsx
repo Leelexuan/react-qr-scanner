@@ -8,7 +8,7 @@ import useScanner from '../hooks/useScanner';
 
 import deepEqual from '../utilities/deepEqual';
 import { defaultComponents, defaultConstraints, defaultStyles } from '../misc';
-import { IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles, TrackFunction } from '../types';
+import { IBoundingBox, IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles, TrackFunction } from '../types';
 
 export interface IScannerProps {
     onScan: (detectedCodes: IDetectedBarcode[]) => void;
@@ -24,6 +24,7 @@ export interface IScannerProps {
     scanDelay?: number;
 }
 
+
 function clearCanvas(canvas: HTMLCanvasElement | null) {
     if (canvas === null) {
         throw new Error('Canvas should always be defined when component is mounted.');
@@ -38,84 +39,31 @@ function clearCanvas(canvas: HTMLCanvasElement | null) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function onFound(detectedCodes: IDetectedBarcode[], videoEl?: HTMLVideoElement | null, trackingEl?: HTMLCanvasElement | null, tracker?: TrackFunction) {
-    const canvas = trackingEl;
+// interface BoundingBox {
+//     x: number;
+//     y: number;
+//     width: number;
+//     height: number;
+// }
 
-    if (canvas === undefined || canvas === null) {
-        throw new Error('onFound handler should only be called when component is mounted. Thus tracking canvas is always defined.');
-    }
-
-    const video = videoEl;
-
-    if (video === undefined || video === null) {
-        throw new Error('onFound handler should only be called when component is mounted. Thus video element is always defined.');
-    }
-
-    if (detectedCodes.length === 0 || tracker === undefined) {
-        clearCanvas(canvas);
-    } else {
-        const displayWidth = video.offsetWidth;
-        const displayHeight = video.offsetHeight;
-
-        const resolutionWidth = video.videoWidth;
-        const resolutionHeight = video.videoHeight;
-
-        const largerRatio = Math.max(displayWidth / resolutionWidth, displayHeight / resolutionHeight);
-        const uncutWidth = resolutionWidth * largerRatio;
-        const uncutHeight = resolutionHeight * largerRatio;
-
-        const xScalar = uncutWidth / resolutionWidth;
-        const yScalar = uncutHeight / resolutionHeight;
-        const xOffset = (displayWidth - uncutWidth) / 2;
-        const yOffset = (displayHeight - uncutHeight) / 2;
-
-        const scale = ({ x, y }: IPoint) => {
-            return {
-                x: Math.floor(x * xScalar),
-                y: Math.floor(y * yScalar)
-            };
-        };
-
-        const translate = ({ x, y }: IPoint) => {
-            return {
-                x: Math.floor(x + xOffset),
-                y: Math.floor(y + yOffset)
-            };
-        };
-
-        const adjustedCodes = detectedCodes.map((detectedCode) => {
-            const { boundingBox, cornerPoints } = detectedCode;
-
-            const { x, y } = translate(
-                scale({
-                    x: boundingBox.x,
-                    y: boundingBox.y
-                })
-            );
-            const { x: width, y: height } = scale({
-                x: boundingBox.width,
-                y: boundingBox.height
-            });
-
-            return {
-                ...detectedCode,
-                cornerPoints: cornerPoints.map((point) => translate(scale(point))),
-                boundingBox: DOMRectReadOnly.fromRect({ x, y, width, height })
-            };
-        });
-
-        canvas.width = video.offsetWidth;
-        canvas.height = video.offsetHeight;
-
-        const ctx = canvas.getContext('2d');
-
-        if (ctx === null) {
-            throw new Error('onFound handler should only be called when component is mounted. Thus tracking canvas 2D context is always defined.');
+function mouseBoundingBox(boundingBoxes: IBoundingBox[], mouseX: number, mouseY: number) {
+    console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
+    for (const box of boundingBoxes) {
+        const { x, y, width, height } = box;
+        console.log("box: ", box)
+        // Check if the mouse coordinates are within the bounding box
+        if (
+            mouseX >= x &&
+            mouseX <= x + width &&
+            mouseY >= y &&
+            mouseY <= y + height
+        ) {
+            console.log("In bounding box"); 
         }
-
-        tracker(adjustedCodes, ctx);
-    }
+    };
+    console.log("Not in bounding box"); 
 }
+
 
 export function Scanner(props: IScannerProps) {
     const { onScan, constraints, formats = ['qr_code'], paused = false, components, children, styles, classNames, allowMultiple, scanDelay, onError } = props;
@@ -132,7 +80,98 @@ export function Scanner(props: IScannerProps) {
 
     const [constraintsCached, setConstraintsCached] = useState(mergedConstraints);
 
+    const [boundingBoxes, setBoundingBoxes] = useState<IBoundingBox[]>([]);
+
     const camera = useCamera();
+
+    //handles drawing of bounding boxes 
+    function onFound(detectedCodes: IDetectedBarcode[], videoEl?: HTMLVideoElement | null, trackingEl?:     HTMLCanvasElement | null, tracker?: TrackFunction) {
+        const canvas = trackingEl;
+
+        if (canvas === undefined || canvas === null) {
+            throw new Error('onFound handler should only be called when component is mounted. Thus tracking canvas is always defined.');
+        }
+
+        const video = videoEl;
+
+        if (video === undefined || video === null) {
+            throw new Error('onFound handler should only be called when component is mounted. Thus video element is always defined.');
+        }
+
+        if (detectedCodes.length === 0 || tracker === undefined) {
+            clearCanvas(canvas);
+
+            //no codes found, set bounding boxes to be empty
+            setBoundingBoxes([]);
+            console.log("no detected codes onFound ", boundingBoxes);
+
+        } else {
+            const displayWidth = video.offsetWidth;
+            const displayHeight = video.offsetHeight;
+
+            const resolutionWidth = video.videoWidth;
+            const resolutionHeight = video.videoHeight;
+
+            const largerRatio = Math.max(displayWidth / resolutionWidth, displayHeight / resolutionHeight);
+            const uncutWidth = resolutionWidth * largerRatio;
+            const uncutHeight = resolutionHeight * largerRatio;
+
+            const xScalar = uncutWidth / resolutionWidth;
+            const yScalar = uncutHeight / resolutionHeight;
+            const xOffset = (displayWidth - uncutWidth) / 2;
+            const yOffset = (displayHeight - uncutHeight) / 2;
+
+            const scale = ({ x, y }: IPoint) => {
+                return {
+                    x: Math.floor(x * xScalar),
+                    y: Math.floor(y * yScalar)
+                };
+            };
+
+            const translate = ({ x, y }: IPoint) => {
+                return {
+                    x: Math.floor(x + xOffset),
+                    y: Math.floor(y + yOffset)
+                };
+            };
+
+            const adjustedCodes = detectedCodes.map((detectedCode) => {
+                const { boundingBox, cornerPoints } = detectedCode;
+
+                const { x, y } = translate(
+                    scale({
+                        x: boundingBox.x,
+                        y: boundingBox.y
+                    })
+                );
+                const { x: width, y: height } = scale({
+                    x: boundingBox.width,
+                    y: boundingBox.height
+                });
+
+                return {
+                    ...detectedCode,
+                    cornerPoints: cornerPoints.map((point) => translate(scale(point))),
+                    boundingBox: DOMRectReadOnly.fromRect({ x, y, width, height })
+                };
+            });
+
+            canvas.width = video.offsetWidth;
+            canvas.height = video.offsetHeight;
+
+            const ctx = canvas.getContext('2d');
+
+            if (ctx === null) {
+                throw new Error('onFound handler should only be called when component is mounted. Thus tracking canvas 2D context is always defined.');
+            }
+
+            const updatedBoundingBoxes = tracker(adjustedCodes, ctx);
+            setBoundingBoxes(updatedBoundingBoxes);
+            console.log("onFound boundingBoxes = tracker", boundingBoxes);
+        };
+        console.log("onFound boundingBoxes return", boundingBoxes);
+    };
+    
 
     const { startScanning, stopScanning } = useScanner({
         videoElementRef: videoRef,
@@ -141,7 +180,7 @@ export function Scanner(props: IScannerProps) {
         formats: formats,
         audio: mergedComponents.audio,
         allowMultiple: allowMultiple,
-        retryDelay: mergedComponents.tracker === undefined ? 500 : 10,
+        retryDelay: mergedComponents.tracker === undefined ? 5000 : 1000,
         scanDelay: scanDelay
     });
 
@@ -261,6 +300,33 @@ export function Scanner(props: IScannerProps) {
         }
     }, [shouldScan]);
 
+    useEffect(() => {
+        if (trackingLayerRef.current) {
+            const canvas = trackingLayerRef.current;
+            console.log("trackinglayerRef.current is found")
+            // Define the event listener function
+            const handleCanvasClick = (event: MouseEvent) => {
+                console.log("handlecanvasclick")
+                // Example: Log the click position relative to the canvas
+                const rect = canvas.getBoundingClientRect();
+                const mouse_x = event.clientX - rect.left;
+                const mouse_y = event.clientY - rect.top;
+                console.log(`Canvas clicked at: (${mouse_x}, ${mouse_y})`);
+                mouseBoundingBox(boundingBoxes, mouse_x, mouse_y);
+            };
+
+            // Attach the event listener
+            canvas.addEventListener('click', handleCanvasClick, false);
+
+            // Clean up the event listener on unmount or when dependencies change
+            return () => {
+                canvas.removeEventListener('click', handleCanvasClick);
+            };
+        };
+        return undefined;
+    }, [boundingBoxes]);
+
+
     return (
         <div style={{ ...defaultStyles.container, ...styles?.container }} className={classNames?.container}>
             <video ref={videoRef} style={{ ...defaultStyles.video, ...styles?.video, visibility: paused ? 'hidden' : 'visible' }} className={classNames?.video} autoPlay muted playsInline />
@@ -274,7 +340,9 @@ export function Scanner(props: IScannerProps) {
                     width: '100%'
                 }}
             />
-            <canvas ref={trackingLayerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
+
+            <canvas ref={trackingLayerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex:10 }} />
+
             <div
                 style={{
                     top: 0,

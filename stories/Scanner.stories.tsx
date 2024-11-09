@@ -99,7 +99,7 @@ function Template(args: IScannerProps) {
                     tracker: getTracker()
                 }}
                 allowMultiple={true}
-                scanDelay={2000}
+                scanDelay={500}
                 paused={pause}
             />
         </div>

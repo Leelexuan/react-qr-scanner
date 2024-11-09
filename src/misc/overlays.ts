@@ -1,6 +1,7 @@
 import { IDetectedBarcode } from '../types';
 
 export function outline(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+
     for (const detectedCode of detectedCodes) {
         const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
 
@@ -16,19 +17,41 @@ export function outline(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingC
         ctx.closePath();
         ctx.stroke();
     }
+    return [];
 }
 
+// export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+//     for (const detectedCode of detectedCodes) {
+//         const {
+//             boundingBox: { x, y, width, height }
+//         } = detectedCode;
+
+//         ctx.lineWidth = 2;
+//         ctx.strokeStyle = 'green';
+//         ctx.strokeRect(x, y, width, height);
+//     }
+// }
+
 export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+    const boundingBoxes = [];
+
     for (const detectedCode of detectedCodes) {
         const {
             boundingBox: { x, y, width, height }
         } = detectedCode;
 
+        // Add border to give it a button-like appearance
         ctx.lineWidth = 2;
-        ctx.strokeStyle = 'yellow';
+        ctx.strokeStyle = 'green';
         ctx.strokeRect(x, y, width, height);
+        boundingBoxes.push({ x, y, width, height });
+        console.log("bounding box stored")
     }
-}
+    console.log("BoundingBoxes Overlay ", boundingBoxes);
+
+    return boundingBoxes;
+};
+
 
 export function centerText(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
     detectedCodes.forEach((detectedCode) => {
@@ -120,4 +143,5 @@ export function centerText(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderi
             ctx.fillText(remainingLine, currentX, y);
         });
     });
+    return [];
 }
