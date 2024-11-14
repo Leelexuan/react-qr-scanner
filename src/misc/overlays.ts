@@ -6,7 +6,7 @@ export function outline(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingC
         const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
 
         ctx.lineWidth = 2;
-        ctx.strokeStyle = 'yellow';
+        ctx.strokeStyle = detectedCode.colour;
 
         ctx.beginPath();
         ctx.moveTo(firstPoint.x, firstPoint.y);
@@ -42,7 +42,7 @@ export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRender
 
         // Add border to give it a button-like appearance
         ctx.lineWidth = 2;
-        ctx.strokeStyle = 'green';
+        ctx.strokeStyle = detectedCode.colour;
         ctx.strokeRect(x, y, width, height);
         boundingBoxes.push({ x, y, width, height });
         console.log("bounding box stored")

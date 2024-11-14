@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo, ReactNode } from 'react';
+import React, {useEffect, useRef, useMemo, ReactNode } from 'react';
+import useState from 'react-usestateref';
 
 import type { BarcodeFormat } from 'barcode-detector';
 
@@ -8,7 +9,8 @@ import useScanner from '../hooks/useScanner';
 
 import deepEqual from '../utilities/deepEqual';
 import { defaultComponents, defaultConstraints, defaultStyles } from '../misc';
-import { IBoundingBox, IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles, TrackFunction } from '../types';
+import { IBoundingBox, IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles,  TrackFunction } from '../types';
+
 
 export interface IScannerProps {
     onScan: (detectedCodes: IDetectedBarcode[]) => void;
@@ -25,6 +27,7 @@ export interface IScannerProps {
 }
 
 
+
 function clearCanvas(canvas: HTMLCanvasElement | null) {
     if (canvas === null) {
         throw new Error('Canvas should always be defined when component is mounted.');
@@ -39,12 +42,6 @@ function clearCanvas(canvas: HTMLCanvasElement | null) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// interface BoundingBox {
-//     x: number;
-//     y: number;
-//     width: number;
-//     height: number;
-// }
 
 function mouseBoundingBox(boundingBoxes: IBoundingBox[], mouseX: number, mouseY: number) {
     console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
@@ -60,8 +57,10 @@ function mouseBoundingBox(boundingBoxes: IBoundingBox[], mouseX: number, mouseY:
         ) {
             console.log("In bounding box"); 
         }
+        else{
+            console.log("Not in bounding box"); 
+        }
     };
-    console.log("Not in bounding box"); 
 }
 
 
@@ -82,7 +81,85 @@ export function Scanner(props: IScannerProps) {
 
     const [boundingBoxes, setBoundingBoxes] = useState<IBoundingBox[]>([]);
 
+    const [data, setData, dataRef] = useState<string[]>([]);
+
+    const [loading, setLoading, loadingRef] = useState<string[]>([]);
+
+    const [errorCodes, setErrorCodes, errorCodesRef] = useState<string[]>([]);
+
     const camera = useCamera();
+
+    //onFound get new detectedCodes 
+    //check against list in data
+    //if data found, set green 
+    //if api call loading, set yellow
+    //when api returns, remove from loading
+    //if not found, set red
+    function retrieveData(detectedCodes: IDetectedBarcode[]) {
+        console.log("retrieveData detectedCodes: " + JSON.stringify(detectedCodes));
+        console.log("retrieveData dataRef: " + dataRef.current);
+        console.log("retrieveData loadingRef: " + loadingRef.current);
+
+        //code can be summarized, for bug tracking purposes now
+        detectedCodes.map((detectedCode) => {
+            if (dataRef.current.includes(detectedCode.rawValue)){
+                console.log("i am in data: " + detectedCode.rawValue);
+                return;
+            }
+            else if (loadingRef.current.includes(detectedCode.rawValue)){
+                console.log("i am in loading: " + detectedCode.rawValue);
+                return;
+            }
+            else if (errorCodesRef.current.includes(detectedCode.rawValue)){
+                console.log("i am in errorCodes: " + detectedCode.rawValue);
+                return;
+            };
+
+            //if not in either, put in loading first, then do API call
+            setLoading((prevLoading) => [...prevLoading, detectedCode.rawValue]);
+
+            const codeDataPromise = new Promise<string>((resolve, reject) => {
+                setTimeout(() => {
+                    if (detectedCode.rawValue == '0123456789'){
+                        reject("ERROR 404: " + detectedCode.rawValue);
+                    } else{
+                        resolve("API: CodeData retrieved");
+                    }
+                }, 1000);
+                
+            });
+            
+            //async function for api call
+            const fetchCodeData = async (detectedCode: IDetectedBarcode): Promise<any> => {
+                try{
+                    const response = await codeDataPromise;
+                    console.log(response);
+                    console.log("fetchCodeData detectedCode: " + detectedCode.rawValue);
+
+                    //for duplicate barcodes, if alr in data, skip api call
+                    if (dataRef.current.includes(detectedCode.rawValue)){
+                        console.log("fetchCodeData: i am in data: " + detectedCode.rawValue);
+                        return;
+                    };
+
+                    //add into data
+                    setData((prevData) => [...prevData, detectedCode.rawValue]);
+                    //if in data, remove from loading
+                    setLoading((prevLoading) => prevLoading.filter(item => item !== detectedCode.rawValue));
+                }
+                catch (error) {
+                    console.log(error);
+                    //add into error
+                    setErrorCodes((prevErrorCodes) => [...prevErrorCodes, detectedCode.rawValue]);
+                    //if error, remove from loading
+                    setLoading((prevLoading) => prevLoading.filter(item => item !== detectedCode.rawValue));
+                }
+            };
+
+            //then call fetchCodeData after setLoading
+            fetchCodeData(detectedCode);
+        });
+    };
 
     //handles drawing of bounding boxes 
     function onFound(detectedCodes: IDetectedBarcode[], videoEl?: HTMLVideoElement | null, trackingEl?:     HTMLCanvasElement | null, tracker?: TrackFunction) {
@@ -135,7 +212,31 @@ export function Scanner(props: IScannerProps) {
                 };
             };
 
+            retrieveData(detectedCodes);
+
             const adjustedCodes = detectedCodes.map((detectedCode) => {
+                console.log("adjustedCodes detectedCode: " + JSON.stringify(detectedCode));
+                console.log("adjustedCodes dataRef: " + dataRef.current);
+                console.log("adjustedCodes loadingRef: " + loadingRef.current);
+                console.log("adjustedCodes errorCodesRef: " + errorCodesRef.current);
+
+                //just to confirm that data and loading doesn't update until component re-renders
+                console.log("adjustedCodes data: " + data);
+                console.log("adjustedCodes loading: " + loading);
+                console.log("adjustedCodes errorCodes: " + errorCodes);
+
+                let colour;
+                if (dataRef.current.includes(detectedCode.rawValue)){
+                    colour = 'green';
+                }
+                else if (loadingRef.current.includes(detectedCode.rawValue)){
+                    colour = 'yellow';
+                }
+                else if (errorCodesRef.current.includes(detectedCode.rawValue)){
+                    colour = 'red';
+                };
+
+                //rest of code same as original
                 const { boundingBox, cornerPoints } = detectedCode;
 
                 const { x, y } = translate(
@@ -144,6 +245,7 @@ export function Scanner(props: IScannerProps) {
                         y: boundingBox.y
                     })
                 );
+
                 const { x: width, y: height } = scale({
                     x: boundingBox.width,
                     y: boundingBox.height
@@ -151,6 +253,8 @@ export function Scanner(props: IScannerProps) {
 
                 return {
                     ...detectedCode,
+                    //added colour as output param
+                    colour,
                     cornerPoints: cornerPoints.map((point) => translate(scale(point))),
                     boundingBox: DOMRectReadOnly.fromRect({ x, y, width, height })
                 };
@@ -165,6 +269,7 @@ export function Scanner(props: IScannerProps) {
                 throw new Error('onFound handler should only be called when component is mounted. Thus tracking canvas 2D context is always defined.');
             }
 
+            //add boundingboxes to state
             const updatedBoundingBoxes = tracker(adjustedCodes, ctx);
             setBoundingBoxes(updatedBoundingBoxes);
             console.log("onFound boundingBoxes = tracker", boundingBoxes);
@@ -325,7 +430,7 @@ export function Scanner(props: IScannerProps) {
         };
         return undefined;
     }, [boundingBoxes]);
-
+  
 
     return (
         <div style={{ ...defaultStyles.container, ...styles?.container }} className={classNames?.container}>
