@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "barcode-detector": "^2.2.7",
+    "react-usestateref": "^1.0.9",
     "webrtc-adapter": "9.0.1"
   },
   "packageManager": "yarn@4.0.2"
