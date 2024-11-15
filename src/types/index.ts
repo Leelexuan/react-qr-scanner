@@ -8,4 +8,5 @@ export type { IStopTaskResult } from './IStopTaskResult';
 export type { IStartCamera } from './IStartCamera';
 export type { IScannerStyles } from './IScannerStyles';
 export type { IScannerClassNames } from './IScannerClassNames';
+export type { IAdjustedBarcode } from './IAdjustedBarcodes';
 export type { TrackFunction } from './TrackFunction';

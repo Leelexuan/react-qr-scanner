@@ -1,6 +1,6 @@
-import { IDetectedBarcode } from '../types';
+import { IAdjustedBarcode } from '../types';
 
-export function outline(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+export function outline(detectedCodes: IAdjustedBarcode[], ctx: CanvasRenderingContext2D) {
 
     for (const detectedCode of detectedCodes) {
         const [firstPoint, ...otherPoints] = detectedCode.cornerPoints;
@@ -20,19 +20,7 @@ export function outline(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingC
     return [];
 }
 
-// export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
-//     for (const detectedCode of detectedCodes) {
-//         const {
-//             boundingBox: { x, y, width, height }
-//         } = detectedCode;
-
-//         ctx.lineWidth = 2;
-//         ctx.strokeStyle = 'green';
-//         ctx.strokeRect(x, y, width, height);
-//     }
-// }
-
-export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+export function boundingBox(detectedCodes: IAdjustedBarcode[], ctx: CanvasRenderingContext2D) {
     const boundingBoxes = [];
 
     for (const detectedCode of detectedCodes) {
@@ -53,7 +41,7 @@ export function boundingBox(detectedCodes: IDetectedBarcode[], ctx: CanvasRender
 };
 
 
-export function centerText(detectedCodes: IDetectedBarcode[], ctx: CanvasRenderingContext2D) {
+export function centerText(detectedCodes: IAdjustedBarcode[], ctx: CanvasRenderingContext2D) {
     detectedCodes.forEach((detectedCode) => {
         const { boundingBox, rawValue } = detectedCode;
         const centerX = boundingBox.x + boundingBox.width / 2;

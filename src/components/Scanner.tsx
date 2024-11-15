@@ -225,7 +225,7 @@ export function Scanner(props: IScannerProps) {
                 console.log("adjustedCodes loading: " + loading);
                 console.log("adjustedCodes errorCodes: " + errorCodes);
 
-                let colour;
+                let colour: string = 'yellow';
                 if (dataRef.current.includes(detectedCode.rawValue)){
                     colour = 'green';
                 }
@@ -296,7 +296,7 @@ export function Scanner(props: IScannerProps) {
             setIsMounted(false);
         };
     }, []);
-
+    
     useEffect(() => {
         if (isMounted) {
             stopScanning();
