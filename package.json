@@ -1,17 +1,13 @@
 {
-  "name": "@yudiel/react-qr-scanner",
-  "version": "2.0.8",
-  "description": "A library to scan QR codes in React.",
-  "author": "Yudiel Curbelo",
+  "name": "@leelexuan/react-qr-api-scanner",
+  "version": "1.0.0",
+  "description": "An enhanced React library for QR code scanning with API interaction capabilities and support for mouse-click detection on bounding boxes.",
+  "author": "Lee Le Xuan",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yudielcurbelo/react-qr-scanner.git"
+    "url": "git+https://github.com/Leelexuan/react-qr-scanner"
   },
-  "bugs": {
-    "url": "https://github.com/yudielcurbelo/react-qr-scanner/issues"
-  },
-  "homepage": "https://github.com/yudielcurbelo/react-qr-scanner#readme",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/index.d.ts",

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 
-import { action } from '@storybook/addon-actions';
-
-import { Scanner as ScannerComp, IScannerProps, outline, boundingBox, centerText, useDevices } from '../src';
+import { Scanner as ScannerComp, IScannerProps, boundingBox} from '../src';
 
 const styles = {
     container: {
@@ -20,42 +18,12 @@ function Template(args: IScannerProps) {
 
     const [pause, setPause] = useState(false);
 
-    const devices = useDevices();
-
-    function getTracker() {
-        switch (tracker) {
-            case 'outline':
-                return outline;
-            case 'boundingBox':
-                return boundingBox;
-            case 'centerText':
-                return centerText;
-            default:
-                return undefined;
-        }
-    }
 
     return (
         <div style={styles.container}>
-            <button style={{ marginBottom: 5 }} onClick={() => setPause((val) => !val)}>
+            {/* <button style={{ marginBottom: 5 }} onClick={() => setPause((val) => !val)}>
                 {pause ? 'Pause Off' : 'Pause On'}
-            </button>
-            <div style={styles.controls}>
-                <select onChange={(e) => setDeviceId(e.target.value)}>
-                    <option value={undefined}>Select a device</option>
-                    {devices.map((device, index) => (
-                        <option key={index} value={device.deviceId}>
-                            {device.label}
-                        </option>
-                    ))}
-                </select>
-                <select style={{ marginLeft: 5 }} onChange={(e) => setTracker(e.target.value)}>
-                    <option value="centerText">Center Text</option>
-                    <option value="outline">Outline</option>
-                    <option value="boundingBox">Bounding Box</option>
-                    <option value={undefined}>No Tracker</option>
-                </select>
-            </div>
+            </button> */}
             <ScannerComp
                 {...args}
                 formats={[
@@ -85,18 +53,17 @@ function Template(args: IScannerProps) {
                     deviceId: deviceId
                 }}
                 onScan={(detectedCodes) => {
-                    action('onScan')(detectedCodes);
+                    console.log(`onError: ${detectedCodes}'`);
                 }}
                 onError={(error) => {
                     console.log(`onError: ${error}'`);
                 }}
                 components={{
-                    audio: true,
                     onOff: true,
                     torch: true,
                     zoom: true,
                     finder: true,
-                    tracker: getTracker()
+                    tracker: boundingBox
                 }}
                 allowMultiple={true}
                 scanDelay={500}

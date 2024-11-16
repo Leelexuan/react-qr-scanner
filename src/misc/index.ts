@@ -4,4 +4,4 @@ export { defaultStyles } from './defaultStyles';
 
 export { default as shimGetUserMedia } from './shimGetUserMedia';
 
-export { outline, centerText, boundingBox } from './overlays';
+export { boundingBox } from './overlays';
