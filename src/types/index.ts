@@ -9,4 +9,5 @@ export type { IStartCamera } from './IStartCamera';
 export type { IScannerStyles } from './IScannerStyles';
 export type { IScannerClassNames } from './IScannerClassNames';
 export type { IAdjustedBarcode } from './IAdjustedBarcodes';
+export type {IBoundingBoxRawValue} from './IBoundingBoxRawValue';
 export type { TrackFunction } from './TrackFunction';

@@ -9,12 +9,14 @@ import useScanner from '../hooks/useScanner';
 
 import deepEqual from '../utilities/deepEqual';
 import { defaultComponents, defaultConstraints, defaultStyles } from '../misc';
-import { IBoundingBox, IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles,  TrackFunction } from '../types';
+import { IDetectedBarcode, IPoint, IScannerClassNames, IScannerComponents, IScannerStyles, IBoundingBoxRawValue, TrackFunction } from '../types';
 
 
 export interface IScannerProps {
     onScan: (detectedCodes: IDetectedBarcode[]) => void;
     onError?: (error: unknown) => void;
+    onBoundingBoxClick: (rawValue: string) => void;
+    onNewBarcodeDetected: (rawValue: string) => Promise<boolean>;
     constraints?: MediaTrackConstraints;
     formats?: BarcodeFormat[];
     paused?: boolean;
@@ -43,29 +45,8 @@ function clearCanvas(canvas: HTMLCanvasElement | null) {
 }
 
 
-function mouseBoundingBox(boundingBoxes: IBoundingBox[], mouseX: number, mouseY: number) {
-    console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
-    for (const box of boundingBoxes) {
-        const { x, y, width, height } = box;
-        console.log("box: ", box)
-        // Check if the mouse coordinates are within the bounding box
-        if (
-            mouseX >= x &&
-            mouseX <= x + width &&
-            mouseY >= y &&
-            mouseY <= y + height
-        ) {
-            console.log("In bounding box"); 
-        }
-        else{
-            console.log("Not in bounding box"); 
-        }
-    };
-}
-
-
 export function Scanner(props: IScannerProps) {
-    const { onScan, constraints, formats = ['qr_code'], paused = false, components, children, styles, classNames, allowMultiple, scanDelay, onError } = props;
+    const { onScan, constraints, formats = ['qr_code'], paused = false, components, children, styles, classNames, allowMultiple, scanDelay, onError, onBoundingBoxClick, onNewBarcodeDetected } = props;
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const pauseFrameRef = useRef<HTMLCanvasElement>(null);
@@ -79,7 +60,7 @@ export function Scanner(props: IScannerProps) {
 
     const [constraintsCached, setConstraintsCached] = useState(mergedConstraints);
 
-    const [boundingBoxes, setBoundingBoxes] = useState<IBoundingBox[]>([]);
+    const [boundingBoxes, setBoundingBoxes] = useState<IBoundingBoxRawValue[]>([]);
 
     const [data, setData, dataRef] = useState<string[]>([]);
 
@@ -117,42 +98,39 @@ export function Scanner(props: IScannerProps) {
 
             //if not in either, put in loading first, then do API call
             setLoading((prevLoading) => [...prevLoading, detectedCode.rawValue]);
-
-            const codeDataPromise = new Promise<string>((resolve, reject) => {
-                setTimeout(() => {
-                    if (detectedCode.rawValue == '0123456789'){
-                        reject("ERROR 404: " + detectedCode.rawValue);
-                    } else{
-                        resolve("API: CodeData retrieved");
-                    }
-                }, 1000);
-                
-            });
             
             //async function for api call
             const fetchCodeData = async (detectedCode: IDetectedBarcode): Promise<any> => {
+                    const rawValue = detectedCode.rawValue;
                 try{
-                    const response = await codeDataPromise;
-                    console.log(response);
-                    console.log("fetchCodeData detectedCode: " + detectedCode.rawValue);
-
                     //for duplicate barcodes, if alr in data, skip api call
-                    if (dataRef.current.includes(detectedCode.rawValue)){
-                        console.log("fetchCodeData: i am in data: " + detectedCode.rawValue);
+                    if (dataRef.current.includes(rawValue)){
+                        console.log("fetchCodeData: i am in data: " + rawValue);
                         return;
                     };
 
-                    //add into data
-                    setData((prevData) => [...prevData, detectedCode.rawValue]);
+                    const response = await onNewBarcodeDetected(rawValue);
+                    console.log(response);
+                    console.log("fetchCodeData detectedCode: " + rawValue);
+                    if (response == true){
+                     //add into data
+                    setData((prevData) => [...prevData, rawValue]);
                     //if in data, remove from loading
-                    setLoading((prevLoading) => prevLoading.filter(item => item !== detectedCode.rawValue));
+                    setLoading((prevLoading) => prevLoading.filter(item => item !== rawValue));
+                    }
+                    else{
+                    //add into error
+                    setErrorCodes((prevErrorCodes) => [...prevErrorCodes, rawValue]);
+                    //if error, remove from loading
+                    setLoading((prevLoading) => prevLoading.filter(item => item !== rawValue));
+                    }
                 }
                 catch (error) {
                     console.log(error);
                     //add into error
-                    setErrorCodes((prevErrorCodes) => [...prevErrorCodes, detectedCode.rawValue]);
+                    setErrorCodes((prevErrorCodes) => [...prevErrorCodes, rawValue]);
                     //if error, remove from loading
-                    setLoading((prevLoading) => prevLoading.filter(item => item !== detectedCode.rawValue));
+                    setLoading((prevLoading) => prevLoading.filter(item => item !== rawValue));
                 }
             };
 
@@ -160,6 +138,28 @@ export function Scanner(props: IScannerProps) {
             fetchCodeData(detectedCode);
         });
     };
+
+    function mouseBoundingBox(boundingBoxes: IBoundingBoxRawValue[], mouseX: number, mouseY: number) {
+    console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
+    for (const box of boundingBoxes) {
+        const { x, y, width, height } = box;
+        console.log("box: ", box)
+        // Check if the mouse coordinates are within the bounding box
+        if (
+            mouseX >= x &&
+            mouseX <= x + width &&
+            mouseY >= y &&
+            mouseY <= y + height
+        ) {
+            console.log("In bounding box"); 
+            onBoundingBoxClick(box.rawValue);
+            return;
+        }
+        else{
+            console.log("Not in bounding box"); 
+        }
+    };
+}
 
     //handles drawing of bounding boxes 
     function onFound(detectedCodes: IDetectedBarcode[], videoEl?: HTMLVideoElement | null, trackingEl?:     HTMLCanvasElement | null, tracker?: TrackFunction) {

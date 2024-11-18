@@ -8,11 +8,13 @@ export function boundingBox(detectedCodes: IAdjustedBarcode[], ctx: CanvasRender
             boundingBox: { x, y, width, height }
         } = detectedCode;
 
+        const rawValue = detectedCode.rawValue;
+
         // Add border to give it a button-like appearance
         ctx.lineWidth = 2;
         ctx.strokeStyle = detectedCode.colour;
         ctx.strokeRect(x, y, width, height);
-        boundingBoxes.push({ x, y, width, height });
+        boundingBoxes.push({ x, y, width, height, rawValue});
         console.log("bounding box stored")
     }
     console.log("BoundingBoxes Overlay ", boundingBoxes);

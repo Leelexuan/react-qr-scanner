@@ -1,3 +1,3 @@
-import { IBoundingBox, IAdjustedBarcode } from './index';
+import { IBoundingBoxRawValue, IAdjustedBarcode } from './index';
 
-export type TrackFunction = (detectedCodes: IAdjustedBarcode[], ctx: CanvasRenderingContext2D) => IBoundingBox[];
+export type TrackFunction = (detectedCodes: IAdjustedBarcode[], ctx: CanvasRenderingContext2D) => IBoundingBoxRawValue[];
