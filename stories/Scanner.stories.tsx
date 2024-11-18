@@ -4,8 +4,13 @@ import { Scanner as ScannerComp, IScannerProps, boundingBox} from '../src';
 
 const styles = {
     container: {
-        width: 400,
-        margin: 'auto'
+        width: '100vw',
+        height: '100vh',
+        margin: 0,
+    },
+    video: {
+        width: '100%',
+        height: '100%'
     },
     controls: {
         marginBottom: 8
