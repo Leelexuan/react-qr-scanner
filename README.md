@@ -1,30 +1,37 @@
-### Features
+# Custom QR Scanner
 
--   Scan codes using a smartphone camera or webcam.
+This library extends the original QR scanning functionality from `@yudiel/react-qr-scanner` by enhancing user interactions and improving feedback through visual and click-based capabilities.
+
+## Features
+
+- Scan QR and barcode formats using a smartphone camera or webcam.
+- Visual bounding box states based on an external API response:
+  - **Red**: Code not found.
+  - **Green**: Code found.
+  - **Yellow**: Loading state.
+- Mouse-click interaction to detect bounding box clicks.
+- Callback functions for:
+  - `onBoundingBoxClick`: Detects clicks within the bounding box.
+  - `onNewBarCodeDetected`: Triggers when a new barcode is scanned.
+- Removed audio beep
+- New overlay which shows bounding box with code
+- Removed tracker and device options
 
 ### Demo
 
-Checkout the [Demo](https://yudielcurbelo.github.io/react-qr-scanner/).
+To see the original library in action, check out [Yudiel's Demo](https://yudielcurbelo.github.io/react-qr-scanner/).
 
 ### Install
 
-```
-yarn add @yudiel/react-qr-scanner
-
-npm install @yudiel/react-qr-scanner
+```bash
+npm install 
 ```
 
-### Usage
+### Run
 
-```jsx
-import { Scanner } from '@yudiel/react-qr-scanner';
-
-const App = () => {
-    return <Scanner onScan={(result) => console.log(result)} />;
-};
+```bash
+npm run storybook
 ```
-
--   There is also a hook to get the available devices `useDevices`.
 
 ### Supported Formats
 
@@ -48,83 +55,15 @@ const App = () => {
 
 | Prop            | Type                                          | Required | Description                                                                      |
 | --------------- | --------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| `onScan`        | `(detectedCodes: IDetectedBarcode[]) => void` | Yes      | Callback function that is called when one or more barcodes are detected.         |
-| `onError`       | `(error: unknown) => void`                    | No       | Callback function that is called when an error occurs while mounting the camera. |
-| `constraints`   | `MediaTrackConstraints`                       | No       | Optional media track constraints to apply to the video stream.                   |
-| `formats`       | `BarcodeFormat[]`                             | No       | List of barcode formats to detect.                                               |
-| `paused`        | `boolean`                                     | No       | If `true`, scanning is paused.                                                   |
-| `children`      | `ReactNode`                                   | No       | Optional children to render inside the scanner component.                        |
-| `components`    | `IScannerComponents`                          | No       | Custom components to use within the scanner.                                     |
-| `styles`        | `IScannerStyles`                              | No       | Custom styles to apply to the scanner and its elements.                          |
-| `classNames`    | `IScannerClassNames`                          | No       | Custom classNames to apply to the scanner and its elements.                      |
-| `allowMultiple` | `boolean`                                     | No       | If `true`, ignore same barcode being scanned.                                    |
-| `scanDelay`     | `number`                                      | No       | Delay in milliseconds between scans.                                             |
-
-### Limitations
-
--   Due to browser implementations, the camera can only be accessed over https or localhost.
--   Beep sound in iOS will only work after user interaction.
--   Server-side rendering won't work, so only require the component when rendering in a browser environment.
-
-### Types
-
-#### `BarcodeFormat`
-
-```typescript
-'aztec' |
-    'code_128' |
-    'code_39' |
-    'code_93' |
-    'codabar' |
-    'databar' |
-    'databar_expanded' |
-    'data_matrix' |
-    'dx_film_edge' |
-    'ean_13' |
-    'ean_8' |
-    'itf' |
-    'maxi_code' |
-    'micro_qr_code' |
-    'pdf417' |
-    'qr_code' |
-    'rm_qr_code' |
-    'upc_a' |
-    'upc_e' |
-    'linear_codes' |
-    'matrix_codes' |
-    'unknown';
-```
-
-#### `IDetectedBarcode`
-
-```typescript
-export interface IDetectedBarcode {
-    boundingBox: IBoundingBox;
-    cornerPoints: IPoint[];
-    format: string;
-    rawValue: string;
-}
-```
-
-#### `IScannerComponents`
-
-```typescript
-export interface IScannerComponents {
-    tracker?: TrackFunction;
-    audio?: boolean;
-    onOff?: boolean;
-    torch?: boolean;
-    zoom?: boolean;
-    finder?: boolean;
-}
-```
-
-#### `IScannerStyles`
-
-```typescript
-export interface IScannerStyles {
-    container?: CSSProperties;
-    video?: CSSProperties;
-    finderBorder?: number;
-}
-```
+| onBoundingBoxClick        | (rawValue: string) => void | Yes      | Callback function that is called when a bounding box is clicked.         |
+| onNewBarcodeDetected       | (rawValue: string) => void | Yes      | Callback function that is called when a new barcode/qr code is detected.      |
+| onError       | (error: unknown) => void                    | No       | Callback function that is called when an error occurs while mounting the camera. |
+| constraints   | MediaTrackConstraints                       | No       | Optional media track constraints to apply to the video stream.                   |
+| formats       | BarcodeFormat[]                             | No       | List of barcode formats to detect.                                               |
+| paused        | boolean                                     | No       | If true, scanning is paused.                                                   |
+| children      | ReactNode                                   | No       | Optional children to render inside the scanner component.                        |
+| components    | IScannerComponents                          | No       | Custom components to use within the scanner.                                     |
+| styles        | IScannerStyles                              | No       | Custom styles to apply to the scanner and its elements.                          |
+| classNames    | IScannerClassNames                          | No       | Custom classNames to apply to the scanner and its elements.                      |
+| allowMultiple | boolean                                     | No       | If true, ignore same barcode being scanned.                                    |
+| scanDelay     | number                                      | No       | Delay in milliseconds between scans.                                             |
