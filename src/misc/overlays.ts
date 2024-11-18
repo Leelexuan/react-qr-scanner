@@ -15,7 +15,6 @@ export function boundingBox(detectedCodes: IAdjustedBarcode[], ctx: CanvasRender
         ctx.strokeStyle = detectedCode.colour;
         ctx.strokeRect(x, y, width, height);
         boundingBoxes.push({ x, y, width, height, rawValue});
-        console.log("bounding box stored")
 
          // Create a background rectangle below the bounding box to fill with text
         const textHeight = 20;   // Height of the filled area for text

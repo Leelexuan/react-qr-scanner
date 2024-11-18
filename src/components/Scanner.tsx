@@ -143,7 +143,6 @@ export function Scanner(props: IScannerProps) {
     console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
     for (const box of boundingBoxes) {
         const { x, y, width, height } = box;
-        console.log("box: ", box)
         // Check if the mouse coordinates are within the bounding box
         if (
             mouseX >= x &&
@@ -151,12 +150,12 @@ export function Scanner(props: IScannerProps) {
             mouseY >= y &&
             mouseY <= y + height
         ) {
-            console.log("In bounding box"); 
+            console.log("In bounding box: " + box); 
             onBoundingBoxClick(box.rawValue);
             return;
         }
         else{
-            console.log("Not in bounding box"); 
+            return;
         }
     };
 }
@@ -220,11 +219,6 @@ export function Scanner(props: IScannerProps) {
                 console.log("adjustedCodes loadingRef: " + loadingRef.current);
                 console.log("adjustedCodes errorCodesRef: " + errorCodesRef.current);
 
-                //just to confirm that data and loading doesn't update until component re-renders
-                console.log("adjustedCodes data: " + data);
-                console.log("adjustedCodes loading: " + loading);
-                console.log("adjustedCodes errorCodes: " + errorCodes);
-
                 let colour: string = 'yellow';
                 if (dataRef.current.includes(detectedCode.rawValue)){
                     colour = 'green';
@@ -272,9 +266,8 @@ export function Scanner(props: IScannerProps) {
             //add boundingboxes to state
             const updatedBoundingBoxes = tracker(adjustedCodes, ctx);
             setBoundingBoxes(updatedBoundingBoxes);
-            console.log("onFound boundingBoxes = tracker", boundingBoxes);
         };
-        console.log("onFound boundingBoxes return", boundingBoxes);
+        return;
     };
     
 
@@ -407,10 +400,8 @@ export function Scanner(props: IScannerProps) {
     useEffect(() => {
         if (trackingLayerRef.current) {
             const canvas = trackingLayerRef.current;
-            console.log("trackinglayerRef.current is found")
             // Define the event listener function
             const handleCanvasClick = (event: MouseEvent) => {
-                console.log("handlecanvasclick")
                 // Example: Log the click position relative to the canvas
                 const rect = canvas.getBoundingClientRect();
                 const mouse_x = event.clientX - rect.left;
