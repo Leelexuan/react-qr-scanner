@@ -24,7 +24,7 @@ To see the original library in action, check out [Yudiel's Demo](https://yudielc
 ### Install
 
 ```bash
-npm install 
+npm install '@leelexuan/react-qr-scanner'
 ```
 
 ### Run
