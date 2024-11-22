@@ -140,23 +140,27 @@ export function Scanner(props: IScannerProps) {
     };
 
     function mouseBoundingBox(boundingBoxes: IBoundingBoxRawValue[], mouseX: number, mouseY: number) {
-    console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
-    for (const box of boundingBoxes) {
-        const { x, y, width, height } = box;
-        // Check if the mouse coordinates are within the bounding box
-        if (
-            mouseX >= x &&
-            mouseX <= x + width &&
-            mouseY >= y &&
-            mouseY <= y + height
-        ) {
-            console.log("In bounding box: " + box); 
-            onBoundingBoxClick(box.rawValue);
-            return;
-        }
-        else{
-            return;
-        }
+        console.log("mouseBoundingBox BoundingBoxes:", boundingBoxes)
+        for (const box of boundingBoxes) {
+            console.log(box)
+            const { x, y, width, height } = box;
+            // Check if the mouse coordinates are within the bounding box
+            if (
+                mouseX >= x &&
+                mouseX <= x + width &&
+                mouseY >= y &&
+                mouseY <= y + height
+            ) {
+                console.log("In bounding box: " + box); 
+                onBoundingBoxClick(box.rawValue);
+                return;
+            }
+            else{
+                continue
+            }
+            
+        return;
+        
     };
 }
 
