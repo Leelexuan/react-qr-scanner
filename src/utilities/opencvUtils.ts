@@ -73,21 +73,21 @@ export function findBarcodeContour(edged: cv.Mat, padding: number, minDistance: 
     return {approxList};
 }
 
-function saveMatAsJpeg(mat: cv.Mat, filename: string) {
-    // Convert Mat to a canvas
-    let canvas = document.createElement("canvas");
-    cv.imshow(canvas, mat); // Render the Mat on the canvas
-    let dataUrl = canvas.toDataURL(filename+".jpeg");
+// function saveMatAsJpeg(mat: cv.Mat, filename: string) {
+//     // Convert Mat to a canvas
+//     let canvas = document.createElement("canvas");
+//     cv.imshow(canvas, mat); // Render the Mat on the canvas
+//     let dataUrl = canvas.toDataURL(filename+".jpeg");
 
-    // Create a link and trigger the download
-    let link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    console.log("saveMatAsJpeg");
-}
+//     // Create a link and trigger the download
+//     let link = document.createElement("a");
+//     link.href = dataUrl;
+//     link.download = filename;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     console.log("saveMatAsJpeg");
+// }
 
 function getRotatedRectVertices(rect: RotatedRect): {matCorners: cv.Mat, corners: [Point2D, Point2D, Point2D, Point2D], minX: number, minY: number} {
     const { center, size, angle } = rect;
@@ -105,13 +105,6 @@ function getRotatedRectVertices(rect: RotatedRect): {matCorners: cv.Mat, corners
         {x: halfWidth, y: halfHeight},  
         {x: -halfWidth, y: halfHeight} 
     ];
-
-//     const corners = cornersOrig.map(pt => 
-//         ({
-//             x: Number(center.x + pt.x * Math.cos(angleRad) - pt.y * Math.sin(angleRad)),
-//             y: Number(center.y + pt.x * Math.sin(angleRad) + pt.y * Math.cos(angleRad))
-// })
-//     )  as [Point2D, Point2D, Point2D, Point2D];
 
     const corners = cornersOrig.map(pt => 
             ({
@@ -186,8 +179,6 @@ function process_image(image: cv.Mat): cv.Mat {
 
 export async function process(image: ImageData, barcodeDetector: BarcodeDetector): Promise<DetectedBarcode[]> {
     const barcodeDict: DetectedBarcode[] = [];
-    const imageWidth = image.width;
-    const imageHeight = image.height;
 
     try{
         const {srcMat, dst} = preprocessImage(image);
