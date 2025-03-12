@@ -281,7 +281,7 @@ export function Scanner(props: IScannerProps) {
         onFound: (detectedCodes) => onFound(detectedCodes, videoRef.current, trackingLayerRef.current, mergedComponents.tracker),
         formats: formats,
         allowMultiple: allowMultiple,
-        retryDelay: mergedComponents.tracker === undefined ? 5000 : 1000,
+        retryDelay: mergedComponents.tracker === undefined ? 2000 : 500,
         scanDelay: scanDelay
     });
 

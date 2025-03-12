@@ -1,8 +1,8 @@
 import { useRef, useCallback, useEffect, RefObject } from 'react';
-
 import { type DetectedBarcode, type BarcodeFormat, BarcodeDetector } from 'barcode-detector';
-
 import { IUseScannerState } from '../types';
+import { process, mergeDictionaries } from '../utilities/opencvUtils';
+
 
 interface IUseScannerProps {
     videoElementRef: RefObject<HTMLVideoElement>;
@@ -15,8 +15,9 @@ interface IUseScannerProps {
     scanDelay?: number;
 }
 
+
 export default function useScanner(props: IUseScannerProps) {
-    const { videoElementRef, onScan, onFound, retryDelay = 100, scanDelay = 0, formats = [], allowMultiple = false } = props;
+    const { videoElementRef, onScan, onFound, retryDelay = props.retryDelay ?? 500, scanDelay = props.scanDelay ?? 0, formats = [], allowMultiple = false } = props;
 
     const barcodeDetectorRef = useRef(new BarcodeDetector({ formats }));
     const animationFrameIdRef = useRef<number | null>(null);
@@ -34,7 +35,30 @@ export default function useScanner(props: IUseScannerProps) {
                 if (timeNow - lastScan < retryDelay) {
                     animationFrameIdRef.current = window.requestAnimationFrame(processFrame(state));
                 } else {
-                    const detectedCodes = await barcodeDetectorRef.current.detect(videoElementRef.current);
+                    
+                    const video = videoElementRef.current;
+                    //cv starts
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    if (!context) return;
+
+                    
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+                    const barcodeDetector = barcodeDetectorRef.current;
+
+                    const detectedBarcodes = await process(imageData, barcodeDetector);
+                    
+                    const oldDetectedCodes = await barcodeDetector.detect(videoElementRef.current);
+
+                    const detectedCodes = mergeDictionaries(oldDetectedCodes, detectedBarcodes);
+
+                    console.log("detectedCodesReal ", oldDetectedCodes);
+                    console.log("newDetectedCodes ", detectedCodes);
 
                     const anyNewCodesDetected = detectedCodes.some((code: DetectedBarcode) => {
                         return !contentBefore.includes(code.rawValue);
