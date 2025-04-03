@@ -1,6 +1,6 @@
 {
   "name": "@leelexuan/react-qr-scanner",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "An enhanced React library for QR code scanning with API interaction capabilities and support for mouse-click detection on bounding boxes.",
   "author": "Lee Le Xuan",
   "license": "MIT",
