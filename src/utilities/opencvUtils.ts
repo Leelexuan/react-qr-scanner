@@ -276,7 +276,7 @@ export function mergeDictionaries(
     );
 
     return (
-      euclideanDistance(center1, center2) < 30 
+      euclideanDistance(center1, center2) < 40 
     );
   };
 
