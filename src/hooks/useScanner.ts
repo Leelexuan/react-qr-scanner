@@ -56,6 +56,7 @@ export default function useScanner(props: IUseScannerProps) {
                     const oldDetectedCodes = await barcodeDetector.detect(videoElementRef.current);
 
                     const detectedCodes = mergeDictionaries(oldDetectedCodes, detectedBarcodes);
+                    // const detectedCodes = detectedBarcodes;
 
                     console.log("detectedCodesReal ", oldDetectedCodes);
                     console.log("newDetectedCodes ", detectedCodes);

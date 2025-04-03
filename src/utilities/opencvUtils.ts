@@ -48,7 +48,7 @@ export function findBarcodeContour(edged: cv.Mat, padding: number, minDistance: 
     let approxList: cv.RotatedRect[] = [];
     let centers: cv.Point[] = [];
     
-    for (let i = 0; i < Math.min(contoursArray.length, 20); i++) {
+    for (let i = 0; i < Math.min(contoursArray.length, 10); i++) {
         let contour = contoursArray[i];
         let rect = cv.minAreaRect(contour);
         let cx = rect.center.x;
@@ -182,7 +182,7 @@ export async function process(image: ImageData, barcodeDetector: BarcodeDetector
 
     try{
         const {srcMat, dst} = preprocessImage(image);
-        const {approxList} = findBarcodeContour(dst, 0.1, 10);
+        const {approxList} = findBarcodeContour(dst, 0.05, 10);
         
 
         for (let rect of approxList) {
@@ -255,24 +255,43 @@ export async function process(image: ImageData, barcodeDetector: BarcodeDetector
 
 export function mergeDictionaries(
   arrayA: DetectedBarcode[],
-  arrayB: DetectedBarcode[]): DetectedBarcode[] {
+  arrayB: DetectedBarcode[]
+): DetectedBarcode[] {
 
-  // Find items in arrayB that are not in arrayA based on the key
-  const itemsToAddToA: DetectedBarcode[] = arrayB
-    .filter((itemB) => !arrayA.some((itemA) => itemA.rawValue === itemB.rawValue || euclideanDistance(new cv.Point(itemA.boundingBox.x, itemA.boundingBox.y), new cv.Point(itemB.boundingBox.x, itemB.boundingBox.y)) < 10))
-    .map((itemB) => ({
-      rawValue: itemB.rawValue,
-      format: itemB.format,
-      boundingBox: itemB.boundingBox,
-      cornerPoints: itemB.cornerPoints
-    }));
+  const calculateArea = (boundingBox: { x: number; y: number; width: number; height: number }) => {
+    return boundingBox.width * boundingBox.height;
+  };
 
+  const windowSize = window.innerWidth * window.innerHeight;
 
-  // Update the arrays with new items
-  const updatedArrayA = [...arrayA, ...itemsToAddToA];
-  
+  const toRemove = (existingItem: DetectedBarcode, item: DetectedBarcode) => {
+    const center1 = new cv.Point(
+      existingItem.boundingBox.x + existingItem.boundingBox.width / 2,
+      existingItem.boundingBox.y + existingItem.boundingBox.height / 2
+    );
 
-  return updatedArrayA;
+    const center2 = new cv.Point(
+      item.boundingBox.x + item.boundingBox.width / 2,
+      item.boundingBox.y + item.boundingBox.height / 2
+    );
+
+    return (
+      euclideanDistance(center1, center2) < 30 
+    );
+  };
+
+  // Merge both arrays and remove duplicates
+  const mergedArray: DetectedBarcode[] = [];
+
+  [...arrayA, ...arrayB].forEach((item) => {
+    const area = calculateArea(item.boundingBox);
+    if (area >= 0.05 * windowSize && !mergedArray.some((existingItem) => toRemove(existingItem, item))) {
+      mergedArray.push(item);
+    }
+  });
+
+  return mergedArray;
 }
+
 
 
