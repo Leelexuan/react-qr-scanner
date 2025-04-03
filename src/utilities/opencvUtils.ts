@@ -285,7 +285,7 @@ export function mergeDictionaries(
 
   [...arrayA, ...arrayB].forEach((item) => {
     const area = calculateArea(item.boundingBox);
-    if (area >= 0.05 * windowSize && !mergedArray.some((existingItem) => toRemove(existingItem, item))) {
+    if (area >= 0.01 * windowSize && !mergedArray.some((existingItem) => toRemove(existingItem, item))) {
       mergedArray.push(item);
     }
   });
