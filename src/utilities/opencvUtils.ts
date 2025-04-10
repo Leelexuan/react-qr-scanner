@@ -121,8 +121,22 @@ function getRotatedRectVertices(rect: RotatedRect): {matCorners: cv.Mat, corners
         )
     );
 
-    let minX = -halfWidth + center.x;
-    let minY = -halfHeight + center.y;
+
+    // // Rotate each corner around the center
+    // let rotatedCorners = cornersOrig.map(pt => 
+    //     new cv.Point(
+    //         pt.x,
+    //         pt.y
+    //     )
+    // );
+
+
+    //Calculate minX, minY from the rotated corners:
+    const xs = rotatedCorners.map(p => p.x);
+    const ys = rotatedCorners.map(p => p.y);
+
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
 
     // Flatten into [x1, y1, x2, y2, x3, y3, x4, y4]
     let flatArray = rotatedCorners.flatMap(pt => [pt.x, pt.y]);
@@ -198,8 +212,9 @@ export async function process(image: ImageData, barcodeDetector: BarcodeDetector
                 [longSide, shortSide] = [200/aspectRatio, 200];
             }
             //check if rect is closer to square or vertical
-            if (rect.angle > 80) {
+            if (rect.angle > 60) {
                 [longSide, shortSide] = [shortSide, longSide];
+                [height, width] = [width, height]
             }
 
             //get points for perspective transform
@@ -227,7 +242,7 @@ export async function process(image: ImageData, barcodeDetector: BarcodeDetector
                     barcodeDict.push({
                         rawValue: barcode.rawValue,
                         format: barcode.format,
-                        boundingBox: new DOMRectReadOnly(minX, minY, rect.size.width, rect.size.height),
+                        boundingBox: new DOMRectReadOnly(minX, minY, width, height),
                         cornerPoints: corners,
                     })
                 }
@@ -285,7 +300,7 @@ export function mergeDictionaries(
 
   [...arrayA, ...arrayB].forEach((item) => {
     const area = calculateArea(item.boundingBox);
-    if (area >= 0.01 * windowSize && !mergedArray.some((existingItem) => toRemove(existingItem, item))) {
+    if (area >= 0.02 * windowSize && !mergedArray.some((existingItem) => toRemove(existingItem, item))) {
       mergedArray.push(item);
     }
   });
